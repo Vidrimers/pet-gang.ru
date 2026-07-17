@@ -42,7 +42,7 @@
 }
 
 .title {
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--pg-text-heading);
   margin: 0;
@@ -107,6 +107,12 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.2s;
+}
+
+.header .btnPrimary {
+  padding: 5px;
+  font-size: 12px;
+}
 }
 
 .btnPrimary:hover { background: var(--pg-accent-hover); }
