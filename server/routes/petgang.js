@@ -91,7 +91,7 @@ router.post('/auth/request-code', async (req, res) => {
       await fetch('https://vidrimers.site/api/telegram-forward', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message, parse_mode: 'HTML' })
+        body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message, parse_mode: 'HTML', bot_token: process.env.TELEGRAM_BOT_TOKEN })
       });
       telegramSent = true;
     } catch (e) {
@@ -616,17 +616,18 @@ router.post('/scan', async (req, res) => {
           console.log(`[PetGang Scan] ${pet.name} | IP: ${ip} | GPS: ${latitude},${longitude}`);
 
           const fetch = globalThis.fetch || (await import('node-fetch')).default;
+          const botToken = process.env.TELEGRAM_BOT_TOKEN;
           await fetch('https://vidrimers.site/api/telegram-forward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message })
+            body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message, bot_token: botToken })
           });
 
           if (latitude && longitude) {
             await fetch('https://vidrimers.site/api/telegram-forward', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ method: 'sendLocation', chat_id: chatId, latitude, longitude })
+              body: JSON.stringify({ method: 'sendLocation', chat_id: chatId, latitude, longitude, bot_token: botToken })
             });
           }
         } catch (tgErr) {
