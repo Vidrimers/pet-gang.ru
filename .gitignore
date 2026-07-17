@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+database/*.db
+uploads/pets/*.jpg
+uploads/pets/*.png
+uploads/pets/*.webp
+logs/
+*.log
