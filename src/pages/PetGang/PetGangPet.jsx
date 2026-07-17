@@ -64,16 +64,28 @@ const PetGangPet = () => {
     }
   };
 
-  const loadScanHistory = async () => {
+  const loadScanHistory = async (reset = true) => {
+    setScanLoading(true);
     try {
       const token = localStorage.getItem('petgang_token');
-      const res = await fetch(`/api/pets/${id}/scans`, {
+      const offset = reset ? 0 : scanHistory.length;
+      const res = await fetch(`/api/pets/${id}/scans?limit=5&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success) setScanHistory(data.data);
+      if (data.success) {
+        if (reset) {
+          setScanHistory(data.data);
+        } else {
+          setScanHistory(prev => [...prev, ...data.data]);
+        }
+        setScanHasMore(data.hasMore);
+        setScanTotal(data.total);
+      }
     } catch (e) {
       console.error('Ошибка загрузки истории:', e);
+    } finally {
+      setScanLoading(false);
     }
   };
 
@@ -89,6 +101,9 @@ const PetGangPet = () => {
   const [pendingDeletes, setPendingDeletes] = useState([]);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [scanHistory, setScanHistory] = useState([]);
+  const [scanHasMore, setScanHasMore] = useState(false);
+  const [scanTotal, setScanTotal] = useState(0);
+  const [scanLoading, setScanLoading] = useState(false);
 
   const generateQr = async () => {
     setQrLoading(true);
@@ -482,6 +497,16 @@ const PetGangPet = () => {
               )}
             </div>
           ))}
+          {scanHasMore && (
+            <button
+              className={styles.loadMoreBtn}
+              onClick={() => loadScanHistory(false)}
+              disabled={scanLoading}
+            >
+              {scanLoading ? 'Загрузка...' : 'Загрузить ещё'}
+            </button>
+          )}
+          <p className={styles.scanHistoryTotal}>Показано {scanHistory.length} из {scanTotal}</p>
         </div>
       )}
 

@@ -651,14 +651,26 @@ router.post('/scan', async (req, res) => {
 router.get('/pets/:id/scans', requirePetGangAuth, async (req, res) => {
   try {
     const db = petgangDb.getDb();
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = parseInt(req.query.offset) || 0;
+
     const scans = await new Promise((resolve, reject) => {
       db.all(
-        'SELECT * FROM scan_logs WHERE pet_id = ? ORDER BY scanned_at DESC',
-        [req.params.id],
+        'SELECT * FROM scan_logs WHERE pet_id = ? ORDER BY scanned_at DESC LIMIT ? OFFSET ?',
+        [req.params.id, limit, offset],
         (err, rows) => err ? reject(err) : resolve(rows)
       );
     });
-    res.json({ success: true, data: scans });
+
+    const total = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT COUNT(*) as count FROM scan_logs WHERE pet_id = ?',
+        [req.params.id],
+        (err, row) => err ? reject(err) : resolve(row?.count || 0)
+      );
+    });
+
+    res.json({ success: true, data: scans, total, hasMore: offset + scans.length < total });
   } catch (error) {
     console.error('Pet Gang: Ошибка получения истории:', error.message);
     res.status(500).json({ success: false, error: 'Ошибка сервера' });
