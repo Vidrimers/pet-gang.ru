@@ -20,7 +20,7 @@ const PetGangProfile = () => {
   const [bindModal, setBindModal] = useState(null); // qr id or null
   const [qrSaved, setQrSaved] = useState(false);
   const [showCreatePet, setShowCreatePet] = useState(false);
-  const [newPet, setNewPet] = useState({ name: '', species: 'Кошка', sex: 'Мужской', customSpecies: '' });
+  const [newPet, setNewPet] = useState({ name: '', species: 'Кошка', sex: 'Самец', customSpecies: '' });
 
   useEffect(() => {
     const token = localStorage.getItem('petgang_token');
@@ -179,7 +179,7 @@ const PetGangProfile = () => {
         const pet = { ...data.data, photos: data.data.photos || [] };
         setPets([pet, ...pets]);
         setShowCreatePet(false);
-        setNewPet({ name: '', species: 'Кошка', sex: 'Мужской', customSpecies: '' });
+        setNewPet({ name: '', species: 'Кошка', sex: 'Самец', customSpecies: '' });
 
         // Если был QR для привязки — привязываем к новому питомцу
         if (bindModal) {
@@ -409,7 +409,7 @@ const PetGangProfile = () => {
               <label className={styles.formLabel}>Пол</label>
               <select className={styles.select} value={newPet.sex}
                 onChange={e => setNewPet({ ...newPet, sex: e.target.value })}>
-                <option>Мужской</option><option>Женский</option>
+                <option>Самец</option><option>Самка</option>
               </select>
             </div>
             <div className={styles.modalActions}>

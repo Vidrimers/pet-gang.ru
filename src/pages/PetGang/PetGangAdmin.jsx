@@ -58,7 +58,7 @@ const PetGangAdmin = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newPet, setNewPet] = useState({ name: '', species: 'Кошка', sex: 'Мужской' });
+  const [newPet, setNewPet] = useState({ name: '', species: 'Кошка', sex: 'Самец' });
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const PetGangAdmin = () => {
         const pet = { ...data.data, photos: data.data.photos || [] };
         setPets([pet, ...pets]);
         setShowCreateForm(false);
-        setNewPet({ name: '', species: 'Кошка', sex: 'Мужской', customSpecies: '' });
+        setNewPet({ name: '', species: 'Кошка', sex: 'Самец', customSpecies: '' });
       }
     } catch (e) {
       console.error('Ошибка создания питомца:', e);
@@ -266,8 +266,8 @@ const PetGangAdmin = () => {
                 value={newPet.sex}
                 onChange={e => setNewPet({ ...newPet, sex: e.target.value })}
               >
-                <option>Мужской</option>
-                <option>Женский</option>
+                <option>Самец</option>
+                <option>Самка</option>
               </select>
             </div>
             <div className={styles.modalActions}>

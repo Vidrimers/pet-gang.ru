@@ -398,8 +398,8 @@ const PetGangPet = () => {
             </label>
             <label>Пол *
               <select className={styles.select} value={form.sex || ''} onChange={e => setForm({ ...form, sex: e.target.value })}>
-                <option>Мужской</option>
-                <option>Женский</option>
+                <option>Самец</option>
+                <option>Самка</option>
               </select>
             </label>
             <label>Дата рождения
