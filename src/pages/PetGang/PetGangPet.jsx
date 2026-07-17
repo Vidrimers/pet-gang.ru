@@ -184,16 +184,30 @@ const PetGangPet = () => {
     }));
   }, [photos.length]);
 
-  // Клавиатура
+  // Клавиатура + колесо мыши
   useEffect(() => {
     if (!lightbox.open) return;
+    document.body.style.overflow = 'hidden';
     const handleKey = (e) => {
       if (e.key === 'ArrowRight') nextPhoto();
       if (e.key === 'ArrowLeft') prevPhoto();
       if (e.key === 'Escape') closeLightbox();
     };
+    let wheelTimeout = null;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (wheelTimeout) return;
+      wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 200);
+      if (e.deltaY > 0) nextPhoto();
+      else if (e.deltaY < 0) prevPhoto();
+    };
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, [lightbox.open, nextPhoto, prevPhoto]);
 
   // Свайп
