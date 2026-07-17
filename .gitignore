@@ -8,3 +8,7 @@ uploads/pets/*.png
 uploads/pets/*.webp
 logs/
 *.log
+scripts/
+test-forward.js
+nginx.conf
+nginx-temp.conf
