@@ -113,7 +113,6 @@
   padding: 5px;
   font-size: 12px;
 }
-}
 
 .btnPrimary:hover { background: var(--pg-accent-hover); }
 
