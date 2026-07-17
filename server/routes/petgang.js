@@ -79,20 +79,21 @@ router.post('/auth/request-code', async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     petgangCodes.set(code, { createdAt: Date.now(), expiresAt: Date.now() + 5 * 60 * 1000 });
 
-    // Отправляем код в Telegram
+    // Отправляем код в Telegram через prod сервер
     let telegramSent = false;
     try {
-      const Telegram = require('../telegram');
-      const tg = new Telegram();
-      if (tg.isEnabled) {
-        const chatId = process.env.PETGANG_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
-        const message = `🔐 Код для входа в Pet Gang:\n\n` +
-          `<code>${code}</code>\n\n` +
-          `⏰ Код действителен 5 минут\n` +
-          `🌐 Сайт: pet-gang.ru`;
-        await tg.bot.sendMessage(chatId, message, { parse_mode: 'HTML', disable_web_page_preview: true });
-        telegramSent = true;
-      }
+      const chatId = process.env.PETGANG_TELEGRAM_CHAT_ID;
+      const message = `🔐 Код для входа в Pet Gang:\n\n` +
+        `<code>${code}</code>\n\n` +
+        `⏰ Код действителен 5 минут\n` +
+        `🌐 Сайт: pet-gang.ru`;
+      const fetch = globalThis.fetch || (await import('node-fetch')).default;
+      await fetch('https://vidrimers.site/api/telegram-forward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message, parse_mode: 'HTML' })
+      });
+      telegramSent = true;
     } catch (e) {
       console.error('Pet Gang Auth: Ошибка Telegram:', e.message);
     }
@@ -601,28 +602,32 @@ router.post('/scan', async (req, res) => {
         });
 
         try {
-          const Telegram = require('../telegram');
-          const tg = new Telegram();
-          if (tg.isEnabled) {
-            const chatId = process.env.PETGANG_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
-            const geoText = (latitude && longitude)
-              ? `GPS координаты: ${latitude}, ${longitude}`
-              : 'GPS координаты: не предоставлены';
+          const chatId = process.env.PETGANG_TELEGRAM_CHAT_ID;
+          const geoText = (latitude && longitude)
+            ? `GPS координаты: ${latitude}, ${longitude}`
+            : 'GPS координаты: не предоставлены';
 
-            const message =
-              `‼️ Паспорт питомца «${pet.name}» был отсканирован.\n` +
-              `Дата и время: ${dateTime}\n` +
-              `${geoText}\n` +
-              `IP адрес: ${ip || 'не определён'}`;
+          const message =
+            `‼️ Паспорт питомца «${pet.name}» был отсканирован.\n` +
+            `Дата и время: ${dateTime}\n` +
+            `${geoText}\n` +
+            `IP адрес: ${ip || 'не определён'}`;
 
-            console.log(`[PetGang Scan] ${pet.name} | IP: ${ip} | GPS: ${latitude},${longitude}`);
-            await tg.bot.sendMessage(chatId, message);
+          console.log(`[PetGang Scan] ${pet.name} | IP: ${ip} | GPS: ${latitude},${longitude}`);
 
-            if (latitude && longitude) {
-              await tg.bot.sendLocation(chatId, latitude, longitude);
-            }
-          } else {
-            console.warn('[PetGang Scan] Telegram не инициализирован');
+          const fetch = globalThis.fetch || (await import('node-fetch')).default;
+          await fetch('https://vidrimers.site/api/telegram-forward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method: 'sendMessage', chat_id: chatId, text: message })
+          });
+
+          if (latitude && longitude) {
+            await fetch('https://vidrimers.site/api/telegram-forward', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ method: 'sendLocation', chat_id: chatId, latitude, longitude })
+            });
           }
         } catch (tgErr) {
           console.error('[PetGang Scan] Ошибка Telegram:', tgErr.message);
