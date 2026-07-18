@@ -41,8 +41,6 @@ const PetGangProfile = () => {
         navigate('/');
       });
     document.title = 'Профиль — Pet Gang';
-    document.body.style.background = 'var(--pg-bg)';
-    return () => { document.body.style.background = ''; };
   }, [navigate]);
 
   const loadProfile = async () => {

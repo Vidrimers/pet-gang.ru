@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './PetGang.module.css';
 
 const PetGangLogin = ({ onLogin }) => {
@@ -6,11 +6,6 @@ const PetGangLogin = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
-
-  useEffect(() => {
-    document.body.style.background = 'var(--pg-bg)';
-    return () => { document.body.style.background = ''; };
-  }, []);
 
   const requestCode = async () => {
     setLoading(true);

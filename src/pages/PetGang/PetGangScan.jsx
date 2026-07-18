@@ -14,11 +14,6 @@ const PetGangScan = () => {
   const touchStartY = useRef(0);
 
   useEffect(() => {
-    document.body.style.background = 'var(--pg-bg)';
-    return () => { document.body.style.background = ''; };
-  }, []);
-
-  useEffect(() => {
     if (token) initScan();
   }, [token]);
 

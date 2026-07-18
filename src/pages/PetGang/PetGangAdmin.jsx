@@ -64,8 +64,6 @@ const PetGangAdmin = () => {
   useEffect(() => {
     checkAuth();
     document.title = 'Pet Gang — Управление питомцами';
-    document.body.style.background = 'var(--pg-bg)';
-    return () => { document.body.style.background = ''; };
   }, []);
 
   // Drag vs click

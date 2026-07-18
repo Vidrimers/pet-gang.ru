@@ -1,26 +1,3 @@
-/* Pet Gang — CSS Variables (тема по умолчанию) */
-:root {
-  --pg-bg: #1a1a2e;
-  --pg-surface: #16213e;
-  --pg-input: #0f3460;
-  --pg-text: #e0e0e0;
-  --pg-text-heading: #fff;
-  --pg-text-muted: #888;
-  --pg-text-label: #aaa;
-  --pg-text-dim: #ccc;
-  --pg-text-faint: #666;
-  --pg-text-placeholder: #555;
-  --pg-border: #333;
-  --pg-border-dashed: #444;
-  --pg-accent: #4ecca3;
-  --pg-accent-hover: #3dbb92;
-  --pg-danger: #ff6b6b;
-  --pg-btn-hover: #2a2a4a;
-  --pg-shadow-accent: rgba(78, 204, 163, 0.15);
-  --pg-overlay: rgba(0, 0, 0, 0.7);
-  --pg-danger-bg: rgba(255, 107, 107, 0.1);
-}
-
 /* Pet Gang — Стили */
 
 .container {
