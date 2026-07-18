@@ -93,6 +93,13 @@
 
 .btnPrimary:hover { background: var(--pg-accent-hover); }
 
+.btnPrimary:disabled {
+  background: var(--pg-border);
+  color: var(--pg-text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .btnDanger {
   padding: 10px 20px;
   border: none;
@@ -785,6 +792,28 @@
 
 .visibilityHint {
   font-size: 13px;
+}
+
+.visSavedToast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--pg-accent);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 1000;
+  animation: fadeInOut 1.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
   color: var(--pg-text-muted);
   margin: 0 0 16px 0;
 }

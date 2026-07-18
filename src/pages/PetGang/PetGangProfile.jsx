@@ -6,12 +6,20 @@ const PetGangProfile = () => {
   const navigate = useNavigate();
   const [authorized, setAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('visibility');
+  const defaultVisibility = {
+    show_name: false, show_phones: false, show_instagram: false, show_telegram: false, show_email: false, show_city: false,
+    show_pet_name: true, show_pet_species: true, show_pet_breed: true, show_pet_sex: true, show_pet_birth_date: true,
+    show_pet_chip_number: true, show_pet_tag_number: true, show_pet_sterilized: true, show_pet_color: true,
+    show_pet_free_walking: true, show_pet_address: true, show_pet_special_marks: true, show_pet_photos: true
+  };
   const [profile, setProfile] = useState({
     name: '', phones: [''], country: '', city: '', instagram: '', telegram: '', email: '',
-    visibility_settings: { show_name: false, show_phones: false, show_instagram: false, show_telegram: false, show_email: false, show_city: false, show_pet_name: true, show_pet_species: true, show_pet_breed: true, show_pet_sex: true, show_pet_birth_date: true, show_pet_chip_number: true, show_pet_tag_number: true, show_pet_sterilized: true, show_pet_color: true, show_pet_free_walking: true, show_pet_address: true, show_pet_special_marks: true, show_pet_photos: true }
+    visibility_settings: { ...defaultVisibility }
   });
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [visSaved, setVisSaved] = useState(false);
+  const [profileOriginal, setProfileOriginal] = useState(null);
 
   // QR codes state
   const [qrList, setQrList] = useState([]);
@@ -54,7 +62,9 @@ const PetGangProfile = () => {
         } else {
           profileData.phones = profileData.phones.map(p => p && !p.startsWith('+') ? '+' + p : p);
         }
+        profileData.visibility_settings = { ...defaultVisibility, ...profileData.visibility_settings };
         setProfile(profileData);
+        setProfileOriginal(JSON.parse(JSON.stringify(profileData)));
       }
     } catch (e) {
       console.error('Ошибка загрузки профиля:', e);
@@ -74,6 +84,7 @@ const PetGangProfile = () => {
       const data = await res.json();
       if (data.success) {
         setSaved(true);
+        setProfileOriginal(JSON.parse(JSON.stringify(profile)));
         setTimeout(() => setSaved(false), 2000);
       }
     } catch (e) {
@@ -93,11 +104,22 @@ const PetGangProfile = () => {
     setProfile({ ...profile, phones });
   };
 
-  const toggleVisibility = (key) => {
-    setProfile({
-      ...profile,
-      visibility_settings: { ...profile.visibility_settings, [key]: !profile.visibility_settings[key] }
-    });
+  const toggleVisibility = async (key) => {
+    const newValue = !profile.visibility_settings[key];
+    const newSettings = { ...profile.visibility_settings, [key]: newValue };
+    setProfile({ ...profile, visibility_settings: newSettings });
+    try {
+      const token = localStorage.getItem('petgang_token');
+      await fetch('/api/profile/visibility', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ visibility_settings: newSettings })
+      });
+      setVisSaved(true);
+      setTimeout(() => setVisSaved(false), 1500);
+    } catch (e) {
+      console.error('Ошибка сохранения видимости:', e);
+    }
   };
 
   // === QR TAB ===
@@ -236,7 +258,11 @@ const PetGangProfile = () => {
       </div>
 
       <div className={styles.formActions}>
-        <button className={styles.btnPrimary} onClick={saveProfile}>
+        <button
+          className={styles.btnPrimary}
+          onClick={saveProfile}
+          disabled={profileOriginal && JSON.stringify({ ...profile, visibility_settings: undefined }) === JSON.stringify({ ...profileOriginal, visibility_settings: undefined })}
+        >
           {saved ? 'Сохранено!' : 'Сохранить'}
         </button>
       </div>
@@ -260,6 +286,7 @@ const PetGangProfile = () => {
       {/* Таб: Настройки видимости */}
       {activeTab === 'visibility' && (
         <>
+          {visSaved && <div className={styles.visSavedToast}>Настройки видимости сохранены</div>}
           {/* Видимость данных владельца */}
           <div className={styles.visibilitySection}>
             <h2>Данные владельца</h2>
@@ -311,12 +338,6 @@ const PetGangProfile = () => {
                 {label}
               </label>
             ))}
-          </div>
-
-          <div className={styles.formActions}>
-            <button className={styles.btnPrimary} onClick={saveProfile}>
-              {saved ? 'Сохранено!' : 'Сохранить'}
-            </button>
           </div>
         </>
       )}

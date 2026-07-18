@@ -151,6 +151,34 @@ function getOrCreateUser(data) {
   });
 }
 
+function updateVisibility(visibility_settings) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM users WHERE id = 1', [], (err, row) => {
+      if (err) { reject(err); return; }
+
+      if (row) {
+        db.run(
+          `UPDATE users SET visibility_settings=? WHERE id=1`,
+          [JSON.stringify(visibility_settings || {})],
+          function (err) {
+            if (err) reject(err);
+            else resolve({ id: 1 });
+          }
+        );
+      } else {
+        db.run(
+          `INSERT INTO users (visibility_settings) VALUES (?)`,
+          [JSON.stringify(visibility_settings || {})],
+          function (err) {
+            if (err) reject(err);
+            else resolve({ id: this.lastID });
+          }
+        );
+      }
+    });
+  });
+}
+
 // === PETS ===
 
 function getAllPets() {
@@ -330,6 +358,7 @@ module.exports = {
   getDb,
   getUser,
   getOrCreateUser,
+  updateVisibility,
   getAllPets,
   getPet,
   createPet,

@@ -199,6 +199,20 @@ router.put('/profile', requirePetGangAuth, async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/profile/visibility — обновить только настройки видимости
+ */
+router.put('/profile/visibility', requirePetGangAuth, async (req, res) => {
+  try {
+    const { visibility_settings } = req.body;
+    await petgangDb.updateVisibility(visibility_settings);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Pet Gang: Ошибка обновления видимости:', error.message);
+    res.status(500).json({ success: false, error: 'Ошибка сервера' });
+  }
+});
+
 // ==================== ПИТОМЦЫ ====================
 
 /**
