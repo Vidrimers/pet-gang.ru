@@ -8,7 +8,7 @@ const PetGangProfile = () => {
   const [activeTab, setActiveTab] = useState('visibility');
   const [profile, setProfile] = useState({
     name: '', phones: [''], country: '', city: '', instagram: '', telegram: '', email: '',
-    visibility_settings: { show_name: false, show_phones: false, show_instagram: false, show_telegram: false, show_email: false, show_city: false }
+    visibility_settings: { show_name: false, show_phones: false, show_instagram: false, show_telegram: false, show_email: false, show_city: false, show_pet_name: true, show_pet_species: true, show_pet_breed: true, show_pet_sex: true, show_pet_birth_date: true, show_pet_chip_number: true, show_pet_tag_number: true, show_pet_sterilized: true, show_pet_color: true, show_pet_free_walking: true, show_pet_address: true, show_pet_special_marks: true, show_pet_photos: true }
   });
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -259,31 +259,66 @@ const PetGangProfile = () => {
 
       {/* Таб: Настройки видимости */}
       {activeTab === 'visibility' && (
-        <div className={styles.visibilitySection}>
-          <p className={styles.visibilityHint}>Выберите, какие данные будут видны при сканировании QR-кода</p>
-          {[
-            ['show_name', 'Имя владельца'],
-            ['show_phones', 'Телефон(ы)'],
-            ['show_instagram', 'Instagram'],
-            ['show_telegram', 'Telegram'],
-            ['show_email', 'Электронная почта'],
-            ['show_city', 'Город']
-          ].map(([key, label]) => (
-            <label key={key} className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={!!profile.visibility_settings[key]}
-                onChange={() => toggleVisibility(key)}
-              />
-              {label}
-            </label>
-          ))}
+        <>
+          {/* Видимость данных владельца */}
+          <div className={styles.visibilitySection}>
+            <h2>Данные владельца</h2>
+            <p className={styles.visibilityHint}>Выберите, какие данные будут видны при сканировании QR-кода</p>
+            {[
+              ['show_name', 'Имя владельца'],
+              ['show_phones', 'Телефон(ы)'],
+              ['show_instagram', 'Instagram'],
+              ['show_telegram', 'Telegram'],
+              ['show_email', 'Электронная почта'],
+              ['show_city', 'Город']
+            ].map(([key, label]) => (
+              <label key={key} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={!!profile.visibility_settings[key]}
+                  onChange={() => toggleVisibility(key)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+
+          {/* Видимость данных питомца */}
+          <div className={styles.visibilitySection}>
+            <h2>Данные питомца</h2>
+            <p className={styles.visibilityHint}>Выберите, какая информация о питомце будет видна при сканировании QR-кода. Если отключить кличку, будет показано «Кличка скрыта»</p>
+            {[
+              ['show_pet_name', 'Кличка'],
+              ['show_pet_photos', 'Фотографии'],
+              ['show_pet_species', 'Вид'],
+              ['show_pet_breed', 'Порода'],
+              ['show_pet_sex', 'Пол'],
+              ['show_pet_birth_date', 'Дата рождения'],
+              ['show_pet_chip_number', 'Номер чипа'],
+              ['show_pet_tag_number', 'Номер клейма'],
+              ['show_pet_sterilized', 'Стерилизация'],
+              ['show_pet_color', 'Окрас'],
+              ['show_pet_free_walking', 'Свободный выгул'],
+              ['show_pet_address', 'Адрес'],
+              ['show_pet_special_marks', 'Особые приметы']
+            ].map(([key, label]) => (
+              <label key={key} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={!!profile.visibility_settings[key]}
+                  onChange={() => toggleVisibility(key)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+
           <div className={styles.formActions}>
             <button className={styles.btnPrimary} onClick={saveProfile}>
               {saved ? 'Сохранено!' : 'Сохранить'}
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {/* Таб: Мои QR-коды */}

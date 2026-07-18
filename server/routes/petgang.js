@@ -448,8 +448,10 @@ router.get('/qr/:token', async (req, res) => {
       const pet = await petgangDb.getPet(qr.pet_id);
       const user = await petgangDb.getUser(pet?.user_id || 1);
       let ownerContact = null;
+      let petVisibility = null;
       if (user) {
         const vis = JSON.parse(user.visibility_settings || '{}');
+        petVisibility = vis;
         ownerContact = {};
         if (vis.show_name) ownerContact.name = user.name;
         if (vis.show_phones) ownerContact.phones = JSON.parse(user.phones || '[]');
@@ -458,7 +460,26 @@ router.get('/qr/:token', async (req, res) => {
         if (vis.show_email) ownerContact.email = user.email;
         if (vis.show_city) ownerContact.city = user.city;
       }
-      return res.json({ success: true, data: { bound: true, pet, ownerContact } });
+
+      // Фильтруем данные питомца по настройкам видимости
+      const filteredPet = pet ? {
+        ...pet,
+        name: petVisibility?.show_pet_name !== false ? pet.name : 'Кличка скрыта',
+        species: petVisibility?.show_pet_species !== false ? pet.species : null,
+        breed: petVisibility?.show_pet_breed !== false ? pet.breed : null,
+        sex: petVisibility?.show_pet_sex !== false ? pet.sex : null,
+        birth_date: petVisibility?.show_pet_birth_date !== false ? pet.birth_date : null,
+        chip_number: petVisibility?.show_pet_chip_number !== false ? pet.chip_number : null,
+        tag_number: petVisibility?.show_pet_tag_number !== false ? pet.tag_number : null,
+        sterilized: petVisibility?.show_pet_sterilized !== false ? pet.sterilized : null,
+        color: petVisibility?.show_pet_color !== false ? pet.color : null,
+        free_walking: petVisibility?.show_pet_free_walking !== false ? pet.free_walking : null,
+        address: petVisibility?.show_pet_address !== false ? pet.address : null,
+        special_marks: petVisibility?.show_pet_special_marks !== false ? pet.special_marks : null,
+        photos: petVisibility?.show_pet_photos !== false ? pet.photos : [],
+      } : null;
+
+      return res.json({ success: true, data: { bound: true, pet: filteredPet, ownerContact } });
     }
 
     res.json({ success: true, data: { bound: false, qr_id: qr.id } });
