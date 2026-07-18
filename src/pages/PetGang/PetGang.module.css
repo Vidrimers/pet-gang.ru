@@ -792,6 +792,8 @@
 
 .visibilityHint {
   font-size: 13px;
+  color: var(--pg-text-muted);
+  margin: 0 0 16px 0;
 }
 
 .visSavedToast {
@@ -813,9 +815,6 @@
   15% { opacity: 1; transform: translateX(-50%) translateY(0); }
   80% { opacity: 1; }
   100% { opacity: 0; }
-}
-  color: var(--pg-text-muted);
-  margin: 0 0 16px 0;
 }
 
 /* Scan Page */
