@@ -98,7 +98,11 @@ function initPetGangDatabase() {
             WHERE is_bound = 1 AND pet_id NOT IN (SELECT id FROM pets)
           `);
 
-          resolve(db);
+          // Миграция: добавление полей для email авторизации
+          const { migrateAuth } = require('./migrate-auth.js');
+          migrateAuth(db).then(() => {
+            resolve(db);
+          });
         });
       });
     });

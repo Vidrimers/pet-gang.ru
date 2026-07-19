@@ -991,6 +991,46 @@
   margin-bottom: 16px;
 }
 
+.loginSuccess {
+  background: #d4edda;
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  padding: 10px;
+  color: #155724;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.loginTabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--pg-border);
+}
+
+.loginTab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pg-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loginTab:hover {
+  color: var(--pg-text);
+}
+
+.loginTabActive {
+  color: var(--pg-primary);
+  border-bottom-color: var(--pg-primary);
+}
+
 .logoutBtn {
   padding: 8px 16px;
   border: 1px solid var(--pg-danger);

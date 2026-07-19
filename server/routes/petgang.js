@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const QRCode = require('qrcode');
 // requireAuth импортируется для совместимости, но Pet Gang использует свою авторизацию
 const petgangDb = require('../database/petgang');
@@ -130,9 +131,33 @@ router.post('/auth/verify-code', async (req, res) => {
 
     petgangCodes.delete(code);
 
+    // Создаём или находим пользователя в БД
+    const db = petgangDb.getDb();
+    let user = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE id = 1', [], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!user) {
+      // Создаём первого пользователя (админ)
+      const result = await new Promise((resolve, reject) => {
+        db.run(
+          `INSERT INTO users (name, role, auth_method) VALUES ('Администратор', 'admin', 'telegram')`,
+          [],
+          function(err) {
+            if (err) reject(err);
+            else resolve({ userId: this.lastID });
+          }
+        );
+      });
+      user = { id: result.userId, role: 'admin' };
+    }
+
     // Создаём JWT сессию
     const token = jwt.sign(
-      { userId: 'petgang_admin', role: 'admin', iat: Math.floor(Date.now() / 1000) },
+      { userId: user.id, role: user.role, iat: Math.floor(Date.now() / 1000) },
       PETGANG_JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -156,6 +181,187 @@ router.post('/auth/logout', requirePetGangAuth, async (req, res) => {
  */
 router.get('/auth/check', requirePetGangAuth, async (req, res) => {
   res.json({ success: true, data: { authorized: true, userId: req.user.userId } });
+});
+
+// ==================== EMAIL АВТОРИЗАЦИЯ ====================
+
+/**
+ * POST /api/auth/register — регистрация через email + пароль
+ */
+router.post('/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: 'Все поля обязательны' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Пароль должен содержать минимум 8 символов' });
+    }
+
+    const db = petgangDb.getDb();
+    
+    // Проверяем, не занят ли email
+    const existing = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (existing) {
+      return res.status(400).json({ success: false, error: 'Email уже зарегистрирован' });
+    }
+
+    // Хешируем пароль
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Генерируем токен подтверждения
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    // Создаём пользователя
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO users (name, email, password_hash, email_verified, email_verification_token, role, auth_method)
+         VALUES (?, ?, ?, 0, ?, 'user', 'email')`,
+        [name, email.toLowerCase(), passwordHash, verificationToken],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ userId: this.lastID });
+        }
+      );
+    });
+
+    // Отправляем email с подтверждением
+    try {
+      const { sendAuthCodeEmail } = require('../services/emailService.js');
+      const publicUrl = process.env.PETGANG_SITE_URL || 'http://localhost:3001';
+      const verifyUrl = `${publicUrl}/verify-email/${verificationToken}`;
+      
+      // Используем sendAuthCodeEmail для отправки ссылки подтверждения
+      await sendAuthCodeEmail({
+        toEmail: email,
+        code: `Подтвердите регистрацию: ${verifyUrl}`,
+      });
+    } catch (emailErr) {
+      console.warn('⚠️ Email подтверждения не отправлен:', emailErr.message);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        message: 'Регистрация успешна! Проверьте email для подтверждения.',
+        userId: result.userId
+      }
+    });
+  } catch (error) {
+    console.error('Pet Gang Auth: Ошибка регистрации:', error.message);
+    res.status(500).json({ success: false, error: 'Ошибка сервера' });
+  }
+});
+
+/**
+ * POST /api/auth/login — вход через email + пароль
+ */
+router.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email и пароль обязательны' });
+    }
+
+    const db = petgangDb.getDb();
+    
+    const user = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Неверный email или пароль' });
+    }
+
+    if (!user.password_hash) {
+      return res.status(400).json({ success: false, error: 'Этот аккаунт создан через Telegram. Войдите через Telegram.' });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(400).json({ success: false, error: 'Неверный email или пароль' });
+    }
+
+    // Создаём JWT
+    const token = jwt.sign(
+      { userId: user.id, role: user.role, iat: Math.floor(Date.now() / 1000) },
+      PETGANG_JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        expiresIn: PETGANG_SESSION_EXPIRY,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          emailVerified: Boolean(user.email_verified)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Pet Gang Auth: Ошибка входа:', error.message);
+    res.status(500).json({ success: false, error: 'Ошибка сервера' });
+  }
+});
+
+/**
+ * POST /api/auth/verify-email — подтверждение email
+ */
+router.post('/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Токен обязателен' });
+    }
+
+    const db = petgangDb.getDb();
+    
+    const user = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE email_verification_token = ?', [token], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Неверный токен' });
+    }
+
+    // Подтверждаем email
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET email_verified = 1, email_verification_token = NULL WHERE id = ?',
+        [user.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    res.json({ success: true, data: { message: 'Email подтверждён' } });
+  } catch (error) {
+    console.error('Pet Gang Auth: Ошибка подтверждения email:', error.message);
+    res.status(500).json({ success: false, error: 'Ошибка сервера' });
+  }
 });
 
 // ==================== ПРОФИЛЬ ====================
